@@ -51,6 +51,8 @@ import (
 	"io"
 	"net/http"
 	"strings"
+        "io/ioutil"
+        "bytes"
 )
 
 var (
@@ -239,6 +241,12 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	for k, s := range req.Header {
 		req2.Header[k] = s
 	}
+        // copy buf to resend it
+        if req.Body != nil {
+            buf, _ := ioutil.ReadAll(req.Body)
+            req.Body = ioutil.NopCloser( bytes.NewBuffer(buf) )
+            req2.Body = ioutil.NopCloser( bytes.NewBuffer(buf) )
+        }
 
 	// Make a request to get the 401 that contains the challenge.
 	resp, err := t.Transport.RoundTrip(req)
